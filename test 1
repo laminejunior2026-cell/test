@@ -54,36 +54,25 @@ local KaiserBox = Tabs["yuki ult"]:AddRightGroupbox("u need kaiser")
 local SaeBox = Tabs["yuki ult"]:AddLeftGroupbox("u need sae")
 
 local AbilityRemote = game:GetService("ReplicatedStorage")
-	:WaitForChild("Packages")
-	:WaitForChild("Knit")
-	:WaitForChild("Services")
-	:WaitForChild("AbilityService")
-	:WaitForChild("RE")
-	:WaitForChild("Ability")
+	:WaitForChild("Packages"):WaitForChild("Knit")
+	:WaitForChild("Services"):WaitForChild("AbilityService")
+	:WaitForChild("RE"):WaitForChild("Ability")
 
 local LocalPlayer = Players.LocalPlayer
 
--- Team Remote & Folder (Fixed)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TeamRemote = ReplicatedStorage
-	:WaitForChild("Packages")
-	:WaitForChild("Knit")
-	:WaitForChild("Services")
-	:WaitForChild("TeamService")
-	:WaitForChild("RE")
-	:WaitForChild("Select")
-
+local TeamRemote = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("TeamService"):WaitForChild("RE"):WaitForChild("Select")
 local TeamsFolder = ReplicatedStorage:WaitForChild("Teams")
 
--- ==================== MOBILE BUTTONS GUI ====================
+-- ==================== MOBILE GUI (RESIZABLE) ====================
 local mobileGui = Instance.new("ScreenGui")
 mobileGui.Name = "MobileButtonsGUI"
 mobileGui.ResetOnSpawn = false
 mobileGui.Parent = player:WaitForChild("PlayerGui")
 
 local mobileFrame = Instance.new("Frame")
-mobileFrame.Size = UDim2.new(0, 260, 0, 420)
-mobileFrame.Position = UDim2.new(0.05, 0, 0.25, 0)
+mobileFrame.Size = UDim2.new(0, 260, 0, 450)
+mobileFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
 mobileFrame.BackgroundColor3 = Color3.fromRGB(8, 15, 35)
 mobileFrame.BackgroundTransparency = 0.25
 mobileFrame.BorderSizePixel = 0
@@ -132,6 +121,36 @@ mobileTitle.InputChanged:Connect(function(input)
 end)
 mobileTitle.InputEnded:Connect(function() dragging = false end)
 
+-- Resizing
+local resizing = false
+local resizeStartPos, resizeStartSize
+local resizeHandle = Instance.new("TextButton")
+resizeHandle.Size = UDim2.new(0, 25, 0, 25)
+resizeHandle.Position = UDim2.new(1, -25, 1, -25)
+resizeHandle.BackgroundTransparency = 1
+resizeHandle.Text = "↘"
+resizeHandle.TextColor3 = Color3.fromRGB(150, 200, 255)
+resizeHandle.TextSize = 20
+resizeHandle.Font = Enum.Font.GothamBold
+resizeHandle.Parent = mobileFrame
+
+resizeHandle.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		resizing = true
+		resizeStartPos = input.Position
+		resizeStartSize = mobileFrame.Size
+	end
+end)
+resizeHandle.InputChanged:Connect(function(input)
+	if resizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - resizeStartPos
+		local newW = math.max(220, resizeStartSize.X.Offset + delta.X)
+		local newH = math.max(320, resizeStartSize.Y.Offset + delta.Y)
+		mobileFrame.Size = UDim2.new(0, newW, 0, newH)
+	end
+end)
+resizeHandle.InputEnded:Connect(function() resizing = false end)
+
 local function createMobileButton(text, callback)
 	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(0.92, 0, 0, 52)
@@ -143,12 +162,10 @@ local function createMobileButton(text, callback)
 	btn.Font = Enum.Font.GothamBold
 	btn.Parent = mobileFrame
 
-	local corner = Instance.new("UICorner", btn)
-	corner.CornerRadius = UDim.new(0, 14)
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 14)
 	local stroke = Instance.new("UIStroke", btn)
 	stroke.Color = Color3.fromRGB(100, 200, 255)
 	stroke.Thickness = 1.6
-	stroke.Transparency = 0.4
 
 	btn.MouseButton1Click:Connect(function()
 		callback()
@@ -194,7 +211,7 @@ local function opCenterOfGravity()
 			AbilityRemote:FireServer("CenterOfGravity", plr.Character)
 		end
 	end
-	Library:Notify({Title = "you activated op center of grav", Time = 0.5})
+	Library:Notify({Title = "op center of grav activated", Time = 0.5})
 end
 
 local function opOppositeDirection()
@@ -204,68 +221,58 @@ local function opOppositeDirection()
 			AbilityRemote:FireServer("Opposite", { Target = plr.Character })
 		end
 	end
-	Library:Notify({Title = "you activated op opposite direction", Time = 0.5})
+	Library:Notify({Title = "op opposite direction activated", Time = 0.5})
 end
 
--- ==================== UI ELEMENTS & MOBILE TOGGLES ====================
-
--- Sae
+-- ==================== TOGGLES FOR MOBILE BUTTONS ====================
+MainGroup:AddToggle("ShowMobileCurve", { Text = "Show Curve Ball Button (Mobile)", Default = false })
 SaeBox:AddToggle("ShowMobileTrip", { Text = "Show Trip Button (Mobile)", Default = false })
-SaeBox:AddButton({ Text = "sae off balance", Func = OffBalanceEveryone, Tooltip = "trip everyone bc why not", Risky = true })
-SaeBox:AddLabel("sae off balance"):AddKeyPicker("SaeOffBalanceKey", { Default = "None", Mode = "Press", Text = "censored", Risky = true, Callback = OffBalanceEveryone })
-SaeBox:AddDropdown("ExcludedPlayers", { SpecialType = "Player", Multi = true, Text = "Select players that dont get tripped", Default = { [LocalPlayer] = true } })
-SaeBox:AddToggle("AutoTrip", { Text = "auto trip", Default = false, Risky = true }):AddKeyPicker("AutoTripKey", { Default = "None", Mode = "Toggle", SyncToggleState = true, Risky = true })
-
-Toggles.AutoTrip:OnChanged(function()
-	if Toggles.AutoTrip.Value then
-		task.spawn(function()
-			while Toggles.AutoTrip.Value and not Library.Unloaded do
-				OffBalanceEveryone()
-				task.wait(0.55)
-			end
-		end)
-	end
-end)
-
--- Kaiser
 KaiserBox:AddToggle("ShowMobileKaiser", { Text = "Show Kaiser Buttons (Mobile)", Default = false })
-KaiserBox:AddButton({ Text = "bicycle kick", Func = function() AbilityRemote:FireServer("Beinschuss") end, Tooltip = "u need kaiser", Risky = true })
-KaiserBox:AddButton({ Text = "cutscene lol kaiser", Func = function() AbilityRemote:FireServer("Magnus") end, Tooltip = "u need kaiser", Risky = true })
-KaiserBox:AddButton({ Text = "kaiser volley everyone", Func = function()
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer and plr.Character then
-			AbilityRemote:FireServer("KaiserVolley", plr.Character)
-		end
-	end
-end, Tooltip = "u need kaiser", Risky = true })
-
--- Rin
 RinBox:AddToggle("ShowMobileRinCenter", { Text = "Show Center Gravity (Mobile)", Default = false })
 RinBox:AddToggle("ShowMobileRinOpp", { Text = "Show Opposite Direction (Mobile)", Default = false })
-RinBox:AddButton({ Text = "op center of gravity", Func = opCenterOfGravity, Tooltip = "uses center of gravity from any range", Risky = true })
-RinBox:AddButton({ Text = "op opposite direction", Func = opOppositeDirection, Tooltip = "censored*", Risky = true })
-
--- Score
 ScoreGoalsBox:AddToggle("ShowMobileScore", { Text = "Show Score Goal Button (Mobile)", Default = false })
+
+-- Original Buttons
+SaeBox:AddButton({ Text = "sae off balance", Func = OffBalanceEveryone, Risky = true })
+SaeBox:AddDropdown("ExcludedPlayers", { SpecialType = "Player", Multi = true, Text = "Excluded Players", Default = {[LocalPlayer] = true} })
+SaeBox:AddToggle("AutoTrip", { Text = "auto trip", Default = false, Risky = true }):AddKeyPicker("AutoTripKey", { Default = "None", Mode = "Toggle", SyncToggleState = true, Risky = true })
+
+KaiserBox:AddButton({ Text = "bicycle kick", Func = function() AbilityRemote:FireServer("Beinschuss") end, Risky = true })
+KaiserBox:AddButton({ Text = "cutscene lol kaiser", Func = function() AbilityRemote:FireServer("Magnus") end, Risky = true })
+KaiserBox:AddButton({ Text = "kaiser volley everyone", Func = function()
+	for _, plr in ipairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer and plr.Character then AbilityRemote:FireServer("KaiserVolley", plr.Character) end
+	end
+end, Risky = true })
+
+RinBox:AddButton({ Text = "op center of gravity", Func = opCenterOfGravity, Risky = true })
+RinBox:AddButton({ Text = "op opposite direction", Func = opOppositeDirection, Risky = true })
+
 ScoreGoalsBox:AddButton({ Text = "score goal☠☠", Func = function()
 	local team = getTeam()
 	if team == "Home" then teleportBall(TELEPORT_HOME)
 	elseif team == "Away" then teleportBall(TELEPORT_AWAY) end
-end, Tooltip = "shoot then click this" })
+end })
 
 -- Mobile Button Logic
 local mobileBtns = {}
-local function updateMobileVisibility()
-	mobileFrame.Visible = Toggles.ShowMobileTrip.Value or Toggles.ShowMobileScore.Value or Toggles.ShowMobileRinCenter.Value or Toggles.ShowMobileRinOpp.Value or Toggles.ShowMobileKaiser.Value
+local function updateVisibility()
+	mobileFrame.Visible = Toggles.ShowMobileCurve.Value or Toggles.ShowMobileTrip.Value or Toggles.ShowMobileScore.Value or Toggles.ShowMobileRinCenter.Value or Toggles.ShowMobileRinOpp.Value or Toggles.ShowMobileKaiser.Value
 end
 
-Toggles.ShowMobileTrip:OnChanged(function(v)
-	if v and not mobileBtns.trip then
-		mobileBtns.trip = createMobileButton("🔥 Trip Everyone", OffBalanceEveryone)
+Toggles.ShowMobileCurve:OnChanged(function(v)
+	if v and not mobileBtns.curve then
+		mobileBtns.curve = createMobileButton("🥀 Curve Ball", function() Toggles.BallMoveToggle:SetValue(not Toggles.BallMoveToggle.Value) end)
 	else
-		if mobileBtns.trip then mobileBtns.trip:Destroy() mobileBtns.trip = nil end
+		if mobileBtns.curve then mobileBtns.curve:Destroy() mobileBtns.curve = nil end
 	end
-	updateMobileVisibility()
+	updateVisibility()
+end)
+
+Toggles.ShowMobileTrip:OnChanged(function(v)
+	if v and not mobileBtns.trip then mobileBtns.trip = createMobileButton("🔥 Trip Everyone", OffBalanceEveryone)
+	else if mobileBtns.trip then mobileBtns.trip:Destroy() mobileBtns.trip = nil end end
+	updateVisibility()
 end)
 
 Toggles.ShowMobileScore:OnChanged(function(v)
@@ -274,46 +281,34 @@ Toggles.ShowMobileScore:OnChanged(function(v)
 			local team = getTeam()
 			if team == "Home" then teleportBall(TELEPORT_HOME) elseif team == "Away" then teleportBall(TELEPORT_AWAY) end
 		end)
-	else
-		if mobileBtns.score then mobileBtns.score:Destroy() mobileBtns.score = nil end
-	end
-	updateMobileVisibility()
+	else if mobileBtns.score then mobileBtns.score:Destroy() mobileBtns.score = nil end end
+	updateVisibility()
 end)
 
 Toggles.ShowMobileRinCenter:OnChanged(function(v)
-	if v and not mobileBtns.rinCenter then
-		mobileBtns.rinCenter = createMobileButton("🌌 Center of Gravity", opCenterOfGravity)
-	else
-		if mobileBtns.rinCenter then mobileBtns.rinCenter:Destroy() mobileBtns.rinCenter = nil end
-	end
-	updateMobileVisibility()
+	if v and not mobileBtns.rinCenter then mobileBtns.rinCenter = createMobileButton("🌌 Center Gravity", opCenterOfGravity)
+	else if mobileBtns.rinCenter then mobileBtns.rinCenter:Destroy() mobileBtns.rinCenter = nil end end
+	updateVisibility()
 end)
 
 Toggles.ShowMobileRinOpp:OnChanged(function(v)
-	if v and not mobileBtns.rinOpp then
-		mobileBtns.rinOpp = createMobileButton("↔️ Opposite Direction", opOppositeDirection)
-	else
-		if mobileBtns.rinOpp then mobileBtns.rinOpp:Destroy() mobileBtns.rinOpp = nil end
-	end
-	updateMobileVisibility()
+	if v and not mobileBtns.rinOpp then mobileBtns.rinOpp = createMobileButton("↔️ Opposite Direction", opOppositeDirection)
+	else if mobileBtns.rinOpp then mobileBtns.rinOpp:Destroy() mobileBtns.rinOpp = nil end end
+	updateVisibility()
 end)
 
 Toggles.ShowMobileKaiser:OnChanged(function(v)
 	if v and not mobileBtns.kaiser then
-		mobileBtns.kaiser = createMobileButton("⚽ Kaiser Volley All", function()
+		mobileBtns.kaiser = createMobileButton("⚽ Kaiser Volley", function()
 			for _, plr in ipairs(Players:GetPlayers()) do
-				if plr ~= LocalPlayer and plr.Character then
-					AbilityRemote:FireServer("KaiserVolley", plr.Character)
-				end
+				if plr ~= LocalPlayer and plr.Character then AbilityRemote:FireServer("KaiserVolley", plr.Character) end
 			end
 		end)
-	else
-		if mobileBtns.kaiser then mobileBtns.kaiser:Destroy() mobileBtns.kaiser = nil end
-	end
-	updateMobileVisibility()
+	else if mobileBtns.kaiser then mobileBtns.kaiser:Destroy() mobileBtns.kaiser = nil end end
+	updateVisibility()
 end)
 
--- ==================== BALL CONTROL ====================
+-- Ball Control
 local enabled = false
 local connection, bodyVelocity, bodyGyro
 local SPEED = 200
@@ -323,19 +318,9 @@ local function enableMove()
 	if not enabled then return end
 	local ball = workspace:FindFirstChild("Football")
 	if not ball then return end
-
-	bodyVelocity = Instance.new("BodyVelocity")
-	bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-	bodyVelocity.Parent = ball
-
-	bodyGyro = Instance.new("BodyGyro")
-	bodyGyro.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
-	bodyGyro.P = 10000
-	bodyGyro.Parent = ball
-
-	camera.CameraType = Enum.CameraType.Custom
-	camera.CameraSubject = ball
-
+	bodyVelocity = Instance.new("BodyVelocity") bodyVelocity.MaxForce = Vector3.new(1e9,1e9,1e9) bodyVelocity.Parent = ball
+	bodyGyro = Instance.new("BodyGyro") bodyGyro.MaxTorque = Vector3.new(1e9,1e9,1e9) bodyGyro.P = 10000 bodyGyro.Parent = ball
+	camera.CameraType = Enum.CameraType.Custom camera.CameraSubject = ball
 	connection = RunService.RenderStepped:Connect(function()
 		if not ball or not ball.Parent then return end
 		local lookDir = camera.CFrame.LookVector
@@ -354,36 +339,6 @@ end
 
 MainGroup:AddToggle("BallMoveToggle", { Text = "curve gyro pro 🥀", Default = false })
 MainGroup:AddToggle("BallNoclip", { Text = "noclip ball", Default = false }):AddKeyPicker("BallNoclipKeybind", { Default = "None", Mode = "Toggle", Text = "toggle noclip ball", SyncToggleState = true })
-
-local BallNoclippingConnection = nil
-local BallClip = true 
-
-local function UpdateBallNoclip()
-	local ball = workspace:FindFirstChild("Football")
-	if not ball then return end
-	if not BallClip then
-		for _, child in pairs(ball:GetDescendants()) do
-			if child:IsA("BasePart") then child.CanCollide = false end
-		end
-		if ball:IsA("BasePart") then ball.CanCollide = false end
-	else
-		for _, child in pairs(ball:GetDescendants()) do
-			if child:IsA("BasePart") then child.CanCollide = true end
-		end
-		if ball:IsA("BasePart") then ball.CanCollide = true end
-	end
-end
-
-Toggles.BallNoclip:OnChanged(function()
-	BallClip = not Toggles.BallNoclip.Value
-	if BallNoclippingConnection then BallNoclippingConnection:Disconnect() BallNoclippingConnection = nil end
-	if not BallClip then
-		BallNoclippingConnection = RunService.Stepped:Connect(UpdateBallNoclip)
-	else
-		UpdateBallNoclip()
-	end
-end)
-
 MainGroup:AddSlider("BallSpeedSlider", { Text = "curve speed ☠", Default = 200, Min = 1, Max = 1000, Rounding = 0 })
 MainGroup:AddLabel("Keybind"):AddKeyPicker("BallKeybind", { Default = "L", Mode = "Toggle", Text = "toggle control ball" })
 
@@ -391,54 +346,33 @@ Toggles.BallMoveToggle:OnChanged(function()
 	enabled = Toggles.BallMoveToggle.Value
 	if enabled then enableMove() else disableMove() end
 end)
-
-Options.BallSpeedSlider:OnChanged(function(val) SPEED = val end)
+Options.BallSpeedSlider:OnChanged(function(v) SPEED = v end)
 Options.BallKeybind:OnClick(function() Toggles.BallMoveToggle:SetValue(not Toggles.BallMoveToggle.Value) end)
 
--- WalkSpeed (Fixed)
-local WSValue = 16
-local function ApplyWalkSpeed()
-	local char = player.Character
-	local hum = char and char:FindFirstChildWhichIsA("Humanoid")
-	if hum then hum.WalkSpeed = WSValue end
+-- Ball Noclip
+local BallNoclippingConnection
+local BallClip = true
+local function UpdateBallNoclip()
+	local ball = workspace:FindFirstChild("Football")
+	if not ball then return end
+	local state = not BallClip
+	for _, p in pairs(ball:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = state end end
+	if ball:IsA("BasePart") then ball.CanCollide = state end
 end
 
-MainGroup:AddSlider("WalkSpeedSlider", {
-	Text = "WalkSpeed",
-	Default = 16,
-	Min = 1,
-	Max = 75,
-	Rounding = 0,
-	Callback = function(val)
-		WSValue = val
-		ApplyWalkSpeed()
-	end
-})
-
--- Team CF (Fixed)
-idkBox:AddToggle("AutoHomeCF", { Text = "auto home cf", Default = false })
-idkBox:AddToggle("AutoAwayCF", { Text = "auto away cf", Default = false })
-idkBox:AddToggle("AutoAvailableCF", { Text = "auto available cf", Default = false })
-
-Toggles.AutoHomeCF:OnChanged(function()
-	if Toggles.AutoHomeCF.Value then
-		Toggles.AutoAwayCF:SetValue(false)
-		Toggles.AutoAvailableCF:SetValue(false)
-		task.spawn(function()
-			while Toggles.AutoHomeCF.Value do
-				if not LocalPlayer.Team or (LocalPlayer.Team.Name ~= "Home" and LocalPlayer.Team.Name ~= "Away") then
-					local currentCF = TeamsFolder.HomeTeam.CF.Value
-					if not currentCF or currentCF == LocalPlayer then
-						TeamRemote:FireServer("Home","CF")
-					end
-				end
-				task.wait(0.3)
-			end
-		end)
-	end
+Toggles.BallNoclip:OnChanged(function()
+	BallClip = not Toggles.BallNoclip.Value
+	if BallNoclippingConnection then BallNoclippingConnection:Disconnect() end
+	if not BallClip then BallNoclippingConnection = RunService.Stepped:Connect(UpdateBallNoclip) else UpdateBallNoclip() end
 end)
 
--- (Same for AutoAwayCF and AutoAvailableCF - I can add them if needed, but this should fix the main errors)
+-- WalkSpeed
+local WSValue = 16
+local function ApplyWalkSpeed()
+	local hum = player.Character and player.Character:FindFirstChildWhichIsA("Humanoid")
+	if hum then hum.WalkSpeed = WSValue end
+end
+MainGroup:AddSlider("WalkSpeedSlider", { Text = "WalkSpeed", Default = 16, Min = 1, Max = 75, Rounding = 0, Callback = function(v) WSValue = v ApplyWalkSpeed() end })
 
 -- UI Settings
 local MenuGroup = Tabs["UI Settings"]:AddLeftGroupbox("Menu", "wrench")
