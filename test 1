@@ -64,7 +64,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TeamRemote = ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"):WaitForChild("Services"):WaitForChild("TeamService"):WaitForChild("RE"):WaitForChild("Select")
 local TeamsFolder = ReplicatedStorage:WaitForChild("Teams")
 
--- ==================== MOBILE GUI (RESIZABLE) ====================
+-- ==================== MOBILE GUI (Resizable) ====================
 local mobileGui = Instance.new("ScreenGui")
 mobileGui.Name = "MobileButtonsGUI"
 mobileGui.ResetOnSpawn = false
@@ -224,7 +224,7 @@ local function opOppositeDirection()
 	Library:Notify({Title = "op opposite direction activated", Time = 0.5})
 end
 
--- ==================== TOGGLES FOR MOBILE BUTTONS ====================
+-- ==================== MOBILE TOGGLES ====================
 MainGroup:AddToggle("ShowMobileCurve", { Text = "Show Curve Ball Button (Mobile)", Default = false })
 SaeBox:AddToggle("ShowMobileTrip", { Text = "Show Trip Button (Mobile)", Default = false })
 KaiserBox:AddToggle("ShowMobileKaiser", { Text = "Show Kaiser Buttons (Mobile)", Default = false })
@@ -254,7 +254,7 @@ ScoreGoalsBox:AddButton({ Text = "score goal☠☠", Func = function()
 	elseif team == "Away" then teleportBall(TELEPORT_AWAY) end
 end })
 
--- Mobile Button Logic
+-- ==================== MOBILE BUTTON LOGIC ====================
 local mobileBtns = {}
 local function updateVisibility()
 	mobileFrame.Visible = Toggles.ShowMobileCurve.Value or Toggles.ShowMobileTrip.Value or Toggles.ShowMobileScore.Value or Toggles.ShowMobileRinCenter.Value or Toggles.ShowMobileRinOpp.Value or Toggles.ShowMobileKaiser.Value
@@ -262,7 +262,9 @@ end
 
 Toggles.ShowMobileCurve:OnChanged(function(v)
 	if v and not mobileBtns.curve then
-		mobileBtns.curve = createMobileButton("🥀 Curve Ball", function() Toggles.BallMoveToggle:SetValue(not Toggles.BallMoveToggle.Value) end)
+		mobileBtns.curve = createMobileButton("🥀 Curve Ball", function()
+			Toggles.BallMoveToggle:SetValue(not Toggles.BallMoveToggle.Value)
+		end)
 	else
 		if mobileBtns.curve then mobileBtns.curve:Destroy() mobileBtns.curve = nil end
 	end
