@@ -57,7 +57,7 @@ local idkBox = Tabs["yuki ult"]:AddRightGroupbox("idk")
 local KaiserBox = Tabs["yuki ult"]:AddRightGroupbox("u need kaiser")
 local SaeBox = Tabs["yuki ult"]:AddLeftGroupbox("u need sae")
 
--- ==================== CLEAN PASTE BLOCK (Curve + Score) ====================
+-- ==================== MOBILE BUTTONS (Curve + Score) ====================
 local mobileButtons = {}
 local buttonY = 0.12
 
@@ -88,7 +88,6 @@ local function createFloatingButton(text, callback)
 	lbl.Font = Enum.Font.GothamBold
 	lbl.Parent = frame
 
-	-- Dragging
 	local dragging = false
 	local dragStart, startPos
 	lbl.InputBegan:Connect(function(input)
@@ -106,26 +105,19 @@ local function createFloatingButton(text, callback)
 	end)
 	lbl.InputEnded:Connect(function() dragging = false end)
 
-	-- Click
 	frame.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			callback()
-		end
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then callback() end
 	end)
 
 	buttonY = buttonY + 0.08
 	return frame
 end
 
--- Toggles
 MainGroup:AddToggle("ShowMobileCurve", { Text = "Show Curve Ball (Mobile)", Default = false }):OnChanged(function(v)
 	if v and not mobileButtons.curve then
-		mobileButtons.curve = createFloatingButton("🥀 Curve Ball", function()
-			Toggles.BallMoveToggle:SetValue(not Toggles.BallMoveToggle.Value)
-		end)
+		mobileButtons.curve = createFloatingButton("🥀 Curve Ball", function() Toggles.BallMoveToggle:SetValue(not Toggles.BallMoveToggle.Value) end)
 	elseif not v and mobileButtons.curve then
-		mobileButtons.curve:Destroy()
-		mobileButtons.curve = nil
+		mobileButtons.curve:Destroy() mobileButtons.curve = nil
 	end
 end)
 
@@ -133,12 +125,10 @@ ScoreGoalsBox:AddToggle("ShowMobileScore", { Text = "Show Score Goal (Mobile)", 
 	if v and not mobileButtons.score then
 		mobileButtons.score = createFloatingButton("🥅 Score Goal", function()
 			local team = getTeam()
-			if team == "Home" then teleportBall(TELEPORT_HOME)
-			elseif team == "Away" then teleportBall(TELEPORT_AWAY) end
+			if team == "Home" then teleportBall(TELEPORT_HOME) elseif team == "Away" then teleportBall(TELEPORT_AWAY) end
 		end)
 	elseif not v and mobileButtons.score then
-		mobileButtons.score:Destroy()
-		mobileButtons.score = nil
+		mobileButtons.score:Destroy() mobileButtons.score = nil
 	end
 end)
 
